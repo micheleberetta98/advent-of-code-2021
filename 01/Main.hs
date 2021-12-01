@@ -6,7 +6,6 @@ main = do
   let nums = map read (lines s)
   print (countIncreased $ sum3by3 nums)
 
-
 countIncreased :: [Int] -> Int
 countIncreased []     = 0
 countIncreased (x:xs) = length $ filter increased $ zip (x:xs) xs
