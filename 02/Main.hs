@@ -12,19 +12,23 @@ data Instruction
   | Up Int
   deriving (Show)
 
-data Position = Position { horizontal :: Int, depth :: Int } deriving (Show)
+data Position = Position
+  { horizontal :: Int
+  , depth      :: Int
+  , aim        :: Int
+  } deriving (Show)
 
 main :: IO ()
 main = do
   lst <- parse pInstructionList "" <$> readFile "input.txt"
-  case foldl' applyInstruction (Position 0 0) <$> lst of
-    Right (Position a b) -> print (a * b)
-    err                  -> print err
+  case foldl' applyInstruction (Position 0 0 0) <$> lst of
+    Right (Position a b _) -> print (a * b)
+    err                    -> print err
 
 applyInstruction :: Position -> Instruction -> Position
-applyInstruction (Position hor depth) (Forward x) = Position (hor + x) depth
-applyInstruction (Position hor depth) (Down x)    = Position hor (depth + x)
-applyInstruction (Position hor depth) (Up x)      = Position hor (depth - x)
+applyInstruction (Position hor depth aim) (Forward x) = Position (hor + x) (depth + aim * x) aim
+applyInstruction (Position hor depth aim) (Down x)    = Position hor depth (aim + x)
+applyInstruction (Position hor depth aim) (Up x)      = Position hor depth (aim - x)
 
 pInstructionList :: Parser [Instruction]
 pInstructionList = sepEndBy pInstruction newline
