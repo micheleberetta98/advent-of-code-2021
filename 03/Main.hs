@@ -20,7 +20,7 @@ main = do
   putStr "CO2 rating:    " >> print co2
   putStr "Answer 2:      " >> print (oxygen * co2)
 
-rate :: ([a] -> Char) -> [[a]] -> Int
+rate :: (String -> Char) -> [String] -> Int
 rate f = toDec . map f . transpose
 
 mostCommon :: Ord a => [a] -> a
