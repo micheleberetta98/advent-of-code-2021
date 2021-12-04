@@ -36,7 +36,7 @@ winners = winners' []
   where
     winners' acc (Game (n:ns) boards) =
       let boards' = map (mark n) boards
-          (notWins, wins) = partition (not . isWinner) boards'
+          (wins, notWins) = partition isWinner boards'
       in winners' (acc ++ map (Winner n) wins) (Game ns notWins)
     winners' acc _ = acc
 
