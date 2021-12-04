@@ -13,10 +13,8 @@ import           Text.Parsec.String
 ---------- Types
 
 data Game = Game [Int] [Board]
-  deriving (Show)
 
 data Winner = Winner Int Board
-  deriving (Show)
 
 instance Eq Winner where
   Winner _ b1 == Winner _ b2 = b1 == b2
@@ -26,15 +24,8 @@ instance Eq Winner where
 main :: IO ()
 main = do
   Right game <- parse pFile "" <$> readFile "input.txt"
-  putStr "Solution part 1:    "
-  case playGame game of
-    Just (Winner n board) -> print (n * unmarkedSum board)
-    Nothing               -> putStrLn "(no winners)"
-
-  putStr "Solution part 2:    "
-  case playGameSquid game of
-    Just (Winner n board) -> print (n * unmarkedSum board)
-    Nothing               -> putStrLn "(no winners)"
+  putStr "Solution part 1: " >> print (winnerValue <$> playGame game)
+  putStr "Solution part 2: " >> print (winnerValue <$> playGameSquid game)
 
 playGame :: Game -> Maybe Winner
 playGame = listToMaybe . winners
@@ -51,13 +42,16 @@ winners = winners' []
       in winners' (acc ++ (ws \\ acc)) (Game ns boards')
     winners' acc _ = acc
 
+winnerValue :: Winner -> Int
+winnerValue (Winner n board) = n * unmarkedSum board
+
 ---------- Parsers
 
 pFile :: Parser Game
 pFile = Game <$> (pNumbers <* newline <* newline) <*> many1 pBoard
 
 pBoard :: Parser Board
-pBoard = Board <$> count 5 pRow
+pBoard = count 5 pRow
   where
     pRow = optional space *> count 5 (pBoardNumber <* many space) <* optional newline
     pBoardNumber = Unmarked <$> number

@@ -7,35 +7,34 @@ module Board
   )
 where
 
-import           Data.List (transpose)
+import           Data.Function (on)
+import           Data.List     (transpose)
 
 ------------ Types
 
-newtype Board = Board [[BoardNumber]]
-  deriving (Show)
+type Board = [[BoardNumber]]
 
-data BoardNumber = Marked Int | Unmarked Int
-  deriving (Eq, Show)
+data BoardNumber =
+  Marked { value :: Int }
+  | Unmarked { value :: Int }
 
-instance Eq Board where
-  Board b1 == Board b2 = map (map value) b1 == map (map value) b2
+instance Eq BoardNumber where
+  (==) = (==) `on` value
 
 ------------ Functions
 
 mark :: Int -> Board -> Board
-mark n (Board (r:rs)) =
-  let Board rest = mark n (Board rs)
-  in Board $ map (when (== Unmarked n) markNumber) r : rest
-mark _ b              = b
+mark n (r:rs) = map (when (hasValue n) markNumber) r : mark n rs
+mark _ b      = b
 
 isWinner :: Board -> Bool
-isWinner (Board b) = isRowFull b || isColFull b
+isWinner b = isRowFull b || isColFull b
   where
     isRowFull = any (all isMarked)
     isColFull = isRowFull . transpose
 
 unmarkedSum :: Board -> Int
-unmarkedSum (Board b) = sum . concatMap (map value . filter isUnmarked) $ b
+unmarkedSum = sum . concatMap (map value . filter (not . isMarked))
 
 ------------ Local utils
 
@@ -46,13 +45,8 @@ isMarked :: BoardNumber -> Bool
 isMarked (Marked _) = True
 isMarked _          = False
 
-isUnmarked :: BoardNumber -> Bool
-isUnmarked = not . isMarked
-
 markNumber :: BoardNumber -> BoardNumber
-markNumber (Unmarked x) = Marked x
-markNumber x            = x
+markNumber = Marked . value
 
-value :: BoardNumber -> Int
-value (Marked x)   = x
-value (Unmarked x) = x
+hasValue :: Int -> BoardNumber -> Bool
+hasValue n = (== n) . value
