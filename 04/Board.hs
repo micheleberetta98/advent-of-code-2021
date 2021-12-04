@@ -7,7 +7,7 @@ module Board
   )
 where
 
-import           Data.List
+import           Data.List (transpose)
 
 ------------ Types
 
@@ -23,8 +23,10 @@ instance Eq Board where
 ------------ Functions
 
 mark :: Int -> Board -> Board
-mark n (Board (r:rs)) = let Board rest = mark n (Board rs) in Board $ map (when (== Unmarked n) markNumber) r : rest
-mark _ b      = b
+mark n (Board (r:rs)) =
+  let Board rest = mark n (Board rs)
+  in Board $ map (when (== Unmarked n) markNumber) r : rest
+mark _ b              = b
 
 isWinner :: Board -> Bool
 isWinner (Board b) = isRowFull b || isColFull b

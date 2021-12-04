@@ -4,9 +4,9 @@ module Main where
 
 import           Board
 import           Control.Applicative (Alternative ((<|>)))
-import           Data.Char
-import           Data.List
-import           Data.Maybe
+import           Data.Char           (isDigit)
+import           Data.List           ((\\))
+import           Data.Maybe          (listToMaybe)
 import           Text.Parsec         hiding ((<|>))
 import           Text.Parsec.String
 
@@ -54,15 +54,12 @@ winners = winners' []
 ---------- Parsers
 
 pFile :: Parser Game
-pFile =
-  Game
-  <$> pNumbers <* newline <* newline
-  <*> many1 pBoard
+pFile = Game <$> (pNumbers <* newline <* newline) <*> many1 pBoard
 
 pBoard :: Parser Board
 pBoard = Board <$> count 5 pRow
   where
-    pRow = optional space *> count 5 (pBoardNumber <* many space) <* optional (char '\n')
+    pRow = optional space *> count 5 (pBoardNumber <* many space) <* optional newline
     pBoardNumber = Unmarked <$> number
 
 pNumbers :: Parser [Int]
