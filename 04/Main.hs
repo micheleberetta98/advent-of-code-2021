@@ -1,34 +1,55 @@
+{-# LANGUAGE TupleSections #-}
+
 module Main where
 
 import           Board
+import           Control.Applicative (Alternative ((<|>)))
 import           Data.Char
 import           Data.List
-import           Text.Parsec
+import           Data.Maybe
+import           Text.Parsec         hiding ((<|>))
 import           Text.Parsec.String
 
----------- Main logic
+---------- Types
 
 data Game = Game [Int] [Board]
   deriving (Show)
+
+data Winner = Winner Int Board
+  deriving (Show)
+
+instance Eq Winner where
+  Winner _ b1 == Winner _ b2 = b1 == b2
+
+---------- Main logic
 
 main :: IO ()
 main = do
   Right game <- parse pFile "" <$> readFile "input.txt"
   putStr "Solution part 1:    "
   case playGame game of
-    Just (n, board) -> print (n * unmarkedSum board)
-    Nothing         -> putStrLn "(no winners)"
+    Just (Winner n board) -> print (n * unmarkedSum board)
+    Nothing               -> putStrLn "(no winners)"
 
-playGame :: Game -> Maybe (Int, Board)
-playGame (Game (n:ns) boards) =
-  let boards' = map (mark n) boards in
-  case find isWinner boards' of
-    Just winner -> Just (n, winner)
-    _           -> playGame $ Game ns boards'
-playGame _        = Nothing
+  putStr "Solution part 2:    "
+  case playGameSquid game of
+    Just (Winner n board) -> print (n * unmarkedSum board)
+    Nothing               -> putStrLn "(no winners)"
 
-unmarkedSum :: Board -> Int
-unmarkedSum = sum . concatMap (map value . filter isUnmarked)
+playGame :: Game -> Maybe Winner
+playGame = listToMaybe . winners
+
+playGameSquid :: Game -> Maybe Winner
+playGameSquid = listToMaybe . reverse . winners
+
+winners :: Game -> [Winner]
+winners = winners' []
+  where
+    winners' acc (Game (n:ns) boards) =
+      let boards' = map (mark n) boards
+          ws = map (Winner n) $ filter isWinner boards'
+      in winners' (acc ++ (ws \\ acc)) (Game ns boards')
+    winners' acc _ = acc
 
 ---------- Parsers
 
@@ -39,7 +60,7 @@ pFile =
   <*> many1 pBoard
 
 pBoard :: Parser Board
-pBoard = count 5 pRow
+pBoard = Board <$> count 5 pRow
   where
     pRow = optional space *> count 5 (pBoardNumber <* many space) <* optional (char '\n')
     pBoardNumber = Unmarked <$> number
