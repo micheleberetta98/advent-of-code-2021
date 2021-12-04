@@ -3,7 +3,7 @@ module Main where
 import           Board
 import           Control.Applicative (Alternative ((<|>)))
 import           Data.Char           (isDigit)
-import           Data.List           ((\\))
+import           Data.List           (partition)
 import           Data.Maybe          (listToMaybe)
 import           Text.Parsec         hiding ((<|>))
 import           Text.Parsec.String
@@ -36,8 +36,8 @@ winners = winners' []
   where
     winners' acc (Game (n:ns) boards) =
       let boards' = map (mark n) boards
-          ws = map (Winner n) $ filter isWinner boards'
-      in winners' (acc ++ (ws \\ acc)) (Game ns boards')
+          (notWins, wins) = partition (not . isWinner) boards'
+      in winners' (acc ++ map (Winner n) wins) (Game ns notWins)
     winners' acc _ = acc
 
 winnerValue :: Winner -> Int
