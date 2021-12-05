@@ -6,7 +6,7 @@ import           Line
 main :: IO ()
 main = do
   Right ls <- parseLines <$> readFile "input.txt"
-  putStr "Soluzione parte 1: " >> print (countAtLeast 2 ls)
+  putStr "Solution: " >> print (countAtLeast 2 ls)
 
 countAtLeast :: Int -> [Line] -> Int
 countAtLeast k = length . filter (atLeast k) . group . sort . concat

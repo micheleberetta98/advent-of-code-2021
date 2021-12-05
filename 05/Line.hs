@@ -22,9 +22,9 @@ line :: Point -> Point -> Line
 line (x1, y1) (x2, y2)
   | x1 == x2  = map (x1,) $ linearIn y1 y2
   | y1 == y2  = map (,y1) $ linearIn x1 x2
-  | otherwise = [] -- zip (linearIn x1 x2) (linearIn y1 y2)
+  | otherwise = zip (linearIn x1 x2) (linearIn y1 y2)
   where
-    linearIn a b = [a `min` b..a `max` b]
+    linearIn a b = if a < b then [a..b] else [a,a-1..b]
 
 ------------ Parsers
 
