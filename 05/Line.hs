@@ -9,7 +9,7 @@ module Line
 
 import           Data.Char          (isDigit)
 import           Text.Parsec        hiding (Line)
-import           Text.Parsec.String
+import           Text.Parsec.String (Parser)
 
 ------------ Types
 
@@ -30,10 +30,8 @@ line (x1, y1) (x2, y2)
 
 parseLines :: String -> Either ParseError [Line]
 parseLines = parse (pLine `sepBy` newline) ""
-
-pLine :: Parser Line
-pLine = line <$> pPoint <*> (string " -> " *> pPoint)
   where
+    pLine = line <$> pPoint <*> (string " -> " *> pPoint)
     pPoint = (,) <$> number <*> (char ',' *> number)
 
 number :: Parser Int
