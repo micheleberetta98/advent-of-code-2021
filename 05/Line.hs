@@ -1,11 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 
-module Line
-  ( Point
-  , Line
-  , line
-  , parseLines
-  ) where
+module Line where
 
 import           Data.Char          (isDigit)
 import           Text.Parsec        hiding (Line)
@@ -33,6 +28,4 @@ parseLines = parse (pLine `sepBy` newline) ""
   where
     pLine = line <$> pPoint <*> (string " -> " *> pPoint)
     pPoint = (,) <$> number <*> (char ',' *> number)
-
-number :: Parser Int
-number = read <$> many1 (satisfy isDigit)
+    number = read <$> many1 (satisfy isDigit)
