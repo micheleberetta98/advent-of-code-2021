@@ -2,6 +2,7 @@
 
 module Main where
 
+import           Data.List
 import qualified Data.Text as T
 
 type LanternfishCount = (Int, Int, Int, Int, Int, Int, Int, Int, Int)
@@ -15,14 +16,10 @@ main = do
 ------------ Functions
 
 fishAtDay :: Int -> LanternfishCount -> Int
-fishAtDay !n = count . apply n step
+fishAtDay !n = count . (!! n) . iterate' step
   where
     count (a, b, c, d, e, f, g, h, i) = a + b + c + d + e + f + g + h + i
     step (a, b, c, d, e, f, g, h, i) = (b, c, d, e, f, g, h + a, i, a)
-
-apply :: Int -> (a -> a) -> a -> a
-apply 0 f !x  = x
-apply !n f !x = apply (n-1) f (f x)
 
 ------------ Parsing
 
@@ -30,7 +27,7 @@ parse :: String -> LanternfishCount
 parse = format . freqs . map read . splitOn ","
   where
     freqs :: [Int] -> [Int]
-    freqs l = map (\x -> length $ filter (== x) l) [1 .. 5]
+    freqs = map length . group . sort
     format [a, b, c, d, e] = (0, a, b, c, d, e, 0, 0, 0) -- In the file there are only values from 1 to 5
 
 splitOn :: String -> String -> [String]
