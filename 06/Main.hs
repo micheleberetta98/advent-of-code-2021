@@ -24,11 +24,15 @@ fishAtDay !n = count . (!! n) . iterate' step
 ------------ Parsing
 
 parse :: String -> LanternfishCount
-parse = format . freqs . map read . splitOn ","
+parse = format . freqs . map read . splitOn ','
   where
     freqs :: [Int] -> [Int]
     freqs = map length . group . sort
     format [a, b, c, d, e] = (0, a, b, c, d, e, 0, 0, 0) -- In the file there are only values from 1 to 5
 
-splitOn :: String -> String -> [String]
-splitOn sep s = T.unpack <$> T.splitOn (T.pack sep) (T.pack s)
+splitOn :: Char -> String -> [String]
+splitOn c s =
+  case dropWhile (== c) s of
+    "" -> []
+    s' -> t : splitOn c s''
+      where (t, s'') = break (== c) s'
