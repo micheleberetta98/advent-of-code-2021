@@ -1,6 +1,8 @@
 module Main where
 
+import           Data.Bifunctor
 import           Data.List
+import           Data.Semigroup hiding (diff)
 
 main :: IO ()
 main = do
@@ -9,10 +11,9 @@ main = do
   putStr "Part 2:   " >> print (lowestFuel fuelCost' nums)
 
 lowestFuel :: ([Int] -> Int -> Int) -> [Int] -> Int
-lowestFuel f nums = minimum $ map (f nums) minMaxInterval
+lowestFuel f nums = minimum $ map (f nums) [low..high]
   where
-    (low, high) = minmax nums
-    minMaxInterval = [low..high]
+    (low, high) = bimap getMin getMax $ foldMap (\x -> (Min x, Max x)) nums
 
 ------------ Functions
 
@@ -25,9 +26,6 @@ fuelCost' xs m = sum $ map (sumOfFirstN . diff m) xs
 
 diff :: Num a => a -> a -> a
 diff x y = abs (x - y)
-
-minmax :: Ord a => [a] -> (a, a)
-minmax = (,) <$> minimum <*> maximum
 
 ------------ Parsing input
 
