@@ -19,8 +19,7 @@ riskLevel = sum . map (+1) . lowPoints
 
 largestBasins :: Matrix Int -> Int
 largestBasins = product . take 3 . reverse . sort . map length . basins
-  where
-    basins m = map (basin m) (lowIndices m)
+  where basins m = map (basin m) (lowIndices m)
 
 basin :: Matrix Int -> (Int, Int) -> [(Int, Int)]
 basin m ij = evalState (basin' m ij) (False <$ m)
@@ -31,15 +30,12 @@ basin' m coords = do
   if visited ! coords
     then pure []
     else do
-      let notVisited = filter (isViable visited) $ neighbouringIndices m coords
+      let notVisited = filter (not . (visited !)) . filter isViable $ neighbouringIndices m coords
       modify' (setElem True coords)
       rest <- concat <$> traverse (basin' m) notVisited
       pure (coords : rest)
   where
-    isViable v ij =
-      let k = m ! ij
-          x = m ! coords
-      in not (v ! ij) && k > x && k < 9
+    isViable ij = let k = m ! ij in k > m ! coords && k < 9
 
 ------------ Utils
 
@@ -56,9 +52,7 @@ neighbours m = map (m !) . neighbouringIndices m
 
 neighbouringIndices :: Matrix a -> (Int, Int) -> [(Int, Int)]
 neighbouringIndices m (i, j) = filter valid [(i+1, j), (i-1, j), (i, j+1), (i, j-1)]
-  where
-    (rows, cols) = (nrows m, ncols m)
-    valid (x, y) = x >= 1 && x <= rows && y >= 1 && y <= cols
+  where valid (x, y) = x >= 1 && x <= nrows m && y >= 1 && y <= ncols m
 
 ------------ Utils
 
