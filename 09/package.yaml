@@ -1,0 +1,20 @@
+name:                tmp
+version:             0.1.0.0
+
+dependencies:
+- base >= 4.7 && < 5
+- vector
+
+library:
+  source-dirs: .
+
+executables:
+  tmp-exe:
+    main:                Main.hs
+    source-dirs:         .
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - tmp
