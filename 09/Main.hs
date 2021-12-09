@@ -1,5 +1,6 @@
 module Main where
 
+import           Control.Monad.State
 import           Data.Char
 import           Data.List
 import           Data.Matrix
@@ -18,17 +19,27 @@ riskLevel = sum . map (+1) . lowPoints
 
 largestBasins :: Matrix Int -> Int
 largestBasins = product . take 3 . reverse . sort . map length . basins
-  where basins m = map (basin (False <$ m) m) (lowIndices m)
-
-basin :: Matrix Bool -> Matrix Int -> (Int, Int) -> [(Int, Int)]
-basin visited m currentCoords = nub $ currentCoords : concatMap (basin visited' m) notVisited
   where
-    visited' = setElem True currentCoords visited
-    notVisited = filter isViable $ neighbouringIndices m currentCoords
-    isViable ij =
+    basins m = map (basin m) (lowIndices m)
+
+basin :: Matrix Int -> (Int, Int) -> [(Int, Int)]
+basin m ij = evalState (basin' m ij) (False <$ m)
+
+basin' :: Matrix Int -> (Int, Int) -> State (Matrix Bool) [(Int, Int)]
+basin' m coords = do
+  visited <- get
+  if visited ! coords
+    then pure []
+    else do
+      let notVisited = filter (isViable visited) $ neighbouringIndices m coords
+      modify' (setElem True coords)
+      rest <- concat <$> traverse (basin' m) notVisited
+      pure (coords : rest)
+  where
+    isViable v ij =
       let k = m ! ij
-          x = m ! currentCoords
-      in not (visited ! ij) && k > x && k < 9
+          x = m ! coords
+      in not (v ! ij) && k > x && k < 9
 
 ------------ Utils
 
