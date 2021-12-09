@@ -3,7 +3,7 @@ module Main where
 import           Control.Monad.State
 import           Data.Char
 import           Data.List
-import           Data.Matrix
+import           Matrix
 
 main :: IO ()
 main = do
@@ -38,12 +38,7 @@ basinSize m coords = do
 
 lowIndices :: Matrix Int -> [(Int, Int)]
 lowIndices = filter <$> isLow <*> indices
-  where indices m = [(i, j) | i <- [1..nrows m], j <- [1..ncols m]]
 
 isLow :: Matrix Int -> (Int, Int) -> Bool
 isLow m pos = all (> m ! pos) neighbours
   where neighbours = map (m !) (neighbouringIndices m pos)
-
-neighbouringIndices :: Matrix a -> (Int, Int) -> [(Int, Int)]
-neighbouringIndices m (i, j) = filter valid [(i+1, j), (i-1, j), (i, j+1), (i, j-1)]
-  where valid (x, y) = x >= 1 && x <= nrows m && y >= 1 && y <= ncols m
