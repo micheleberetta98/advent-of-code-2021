@@ -16,28 +16,28 @@ data Result = Corrupted { corruptionBracket :: Bracket } | NotCorrupted
 main :: IO ()
 main = do
   chunks <- map parse . lines <$> readFile "input.txt"
-  putStr "Answer 1:  " >> print (errorScore chunks)
-  putStr "Answer 2:  " >> print (completionScore chunks)
+  let results = map corrupted chunks
+  putStr "Answer 1:  " >> print (errorScore results)
+  putStr "Answer 2:  " >> print (completionScore results)
 
 ------------ Solutions
 
-errorScore :: [[Symbol]] -> Int
-errorScore = sum . map (corruptionPoints . corruptionBracket) . filter isCorrupted . map evalCorrupted
-  where evalCorrupted = fst . corrupted
+errorScore :: [(Result, [Bracket])] -> Int
+errorScore = sum . map (corruptionPoints . corruptionBracket . fst) . filter isCorrupted
 
-completionScore :: [[Symbol]] -> Int
+completionScore :: [(Result, [Bracket])] -> Int
 completionScore = middleElement . sort . completionScores
   where middleElement xs = xs !! (length xs `div` 2)
 
-completionScores :: [[Symbol]] -> [Int]
-completionScores = map (getPoints . snd) . filter (not . isCorrupted . fst) . map corrupted
+completionScores :: [(Result, [Bracket])] -> [Int]
+completionScores = map (getPoints . snd) . filter (not . isCorrupted)
   where getPoints = foldl' (\acc x -> 5 * acc + completionPoints x) 0
 
 ------------ Utils
 
-isCorrupted :: Result -> Bool
-isCorrupted (Corrupted _) = True
-isCorrupted _             = False
+isCorrupted :: (Result, [Bracket]) -> Bool
+isCorrupted (Corrupted _, _) = True
+isCorrupted _                = False
 
 corrupted :: [Symbol] -> (Result, [Bracket])
 corrupted xs = runState (corrupted' xs) []
