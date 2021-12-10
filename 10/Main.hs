@@ -15,7 +15,7 @@ data Result = Corrupted { corruptionBracket :: Bracket } | NotCorrupted
 
 main :: IO ()
 main = do
-  chunks <- map parse . lines <$> readFile "input.txt"
+  chunks <- map (map parse) . lines <$> readFile "input.txt"
   let results = map corrupted chunks
   putStr "Answer 1:  " >> print (errorScore results)
   putStr "Answer 2:  " >> print (completionScore results)
@@ -65,14 +65,13 @@ completionPoints Angular = 4
 
 ------------ Parsing
 
-parse :: String -> [Symbol]
-parse ""       = []
-parse ('(':xs) = Open Round : parse xs
-parse ('[':xs) = Open Square : parse xs
-parse ('{':xs) = Open Curly : parse xs
-parse ('<':xs) = Open Angular : parse xs
-parse (')':xs) = Closed Round : parse xs
-parse (']':xs) = Closed Square : parse xs
-parse ('}':xs) = Closed Curly : parse xs
-parse ('>':xs) = Closed Angular : parse xs
-parse (_:xs)   = parse xs
+parse :: Char -> Symbol
+parse '(' = Open Round
+parse '[' = Open Square
+parse '{' = Open Curly
+parse '<' = Open Angular
+parse ')' = Closed Round
+parse ']' = Closed Square
+parse '}' = Closed Curly
+parse '>' = Closed Angular
+parse _   = undefined -- Input is supposed correct
