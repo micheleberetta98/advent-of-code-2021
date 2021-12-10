@@ -23,20 +23,15 @@ main = do
 
 errorScore :: [[Symbol]] -> Int
 errorScore = sum . map (corruptionPoints . corruptionBracket) . filter isCorrupted . map evalCorrupted
-  where
-    evalCorrupted x = evalState (corrupted x) []
+  where evalCorrupted = fst . corrupted
 
 completionScore :: [[Symbol]] -> Int
 completionScore = middleElement . sort . completionScores
-  where
-    middleElement xs = xs !! (length xs `div` 2)
+  where middleElement xs = xs !! (length xs `div` 2)
 
 completionScores :: [[Symbol]] -> [Int]
-completionScores = map (foldl' updatePoints 0 . snd) . filter isIncomplete . map runCorrupted
-  where
-    isIncomplete (r, _) = r == NotCorrupted
-    runCorrupted x = runState (corrupted x) []
-    updatePoints acc x = 5 * acc + completionPoints x
+completionScores = map (getPoints . snd) . filter (not . isCorrupted . fst) . map corrupted
+  where getPoints = foldl' (\acc x -> 5 * acc + completionPoints x) 0
 
 ------------ Utils
 
@@ -44,14 +39,17 @@ isCorrupted :: Result -> Bool
 isCorrupted (Corrupted _) = True
 isCorrupted _             = False
 
-corrupted :: [Symbol] -> State [Bracket] Result
-corrupted []              = pure NotCorrupted
-corrupted (Open o : xs)   = modify (o :) >> corrupted xs
-corrupted (Closed c : xs) = do
-  current <- gets listToMaybe
-  if current == Just c
-    then modify tail >> corrupted xs
-    else pure (Corrupted c)
+corrupted :: [Symbol] -> (Result, [Bracket])
+corrupted xs = runState (corrupted' xs) []
+  where
+    corrupted' :: [Symbol] -> State [Bracket] Result
+    corrupted' []                = pure NotCorrupted
+    corrupted' (Open o : rest)   = modify (o :) >> corrupted' rest
+    corrupted' (Closed c : rest) = do
+      current <- gets listToMaybe
+      if current == Just c
+        then modify tail >> corrupted' rest
+        else pure (Corrupted c)
 
 corruptionPoints :: Bracket -> Int
 corruptionPoints Round   = 3
