@@ -11,21 +11,34 @@ data Symbol = Open Bracket | Closed Bracket
   deriving (Show, Eq)
 
 data Result = Corrupted { corruptionBracket :: Bracket } | NotCorrupted
+  deriving (Show, Eq)
 
 main :: IO ()
 main = do
   chunks <- map parse . lines <$> readFile "input.txt"
   putStr "Answer 1:  " >> print (errorScore chunks)
+  putStr "Answer 2:  " >> print (completionScore chunks)
 
 ------------ Solutions
 
 errorScore :: [[Symbol]] -> Int
 errorScore = sum . map (corruptionPoints . corruptionBracket) . filter isCorrupted . map evalCorrupted
+  where
+    evalCorrupted x = evalState (corrupted x) []
+
+completionScore :: [[Symbol]] -> Int
+completionScore = middleElement . sort . completionScores
+  where
+    middleElement xs = xs !! (length xs `div` 2)
+
+completionScores :: [[Symbol]] -> [Int]
+completionScores = map (foldl' updatePoints 0 . snd) . filter isIncomplete . map runCorrupted
+  where
+    isIncomplete (r, _) = r == NotCorrupted
+    runCorrupted x = runState (corrupted x) []
+    updatePoints acc x = 5 * acc + completionPoints x
 
 ------------ Utils
-
-evalCorrupted :: [Symbol] -> Result
-evalCorrupted x = evalState (corrupted x) []
 
 isCorrupted :: Result -> Bool
 isCorrupted (Corrupted _) = True
@@ -45,6 +58,12 @@ corruptionPoints Round   = 3
 corruptionPoints Square  = 57
 corruptionPoints Curly   = 1197
 corruptionPoints Angular = 25137
+
+completionPoints :: Bracket -> Int
+completionPoints Round   = 1
+completionPoints Square  = 2
+completionPoints Curly   = 3
+completionPoints Angular = 4
 
 ------------ Parsing
 
