@@ -1,11 +1,11 @@
 module Main where
 
-import           Control.Monad
-import           Control.Monad.State
-import           Data.Char
-import           Data.List
-import           Data.Set            (Set)
-import qualified Data.Set            as S
+import           Control.Monad       (when)
+import           Control.Monad.State (MonadState (get, put), State, evalState,
+                                      gets, modify', when)
+import           Data.Char           (digitToInt)
+import           Data.List           (elemIndex, foldl')
+import           Data.Set            (Set, difference)
 import           Matrix
 import           Octopus
 
@@ -38,7 +38,7 @@ flash ixs = do
   let m' = foldl' (modifyElem increaseLuminosity) m $ concatMap neighbouringIndices ixs
   put m'
   when (m /= m') $ do
-    flash $ flashedIndices m' `S.difference` flashedIndices m
+    flash $ flashedIndices m' `difference` flashedIndices m
 
 flashedIndices :: Matrix Octopus -> Set (Int, Int)
 flashedIndices = indicesWhere flashed
