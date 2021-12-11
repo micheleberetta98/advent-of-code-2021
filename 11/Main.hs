@@ -13,11 +13,15 @@ main :: IO ()
 main = do
   m <- parse <$> readFile "input.txt"
   putStr "Answer 1:  " >> print (flashesAfter 100 m)
+  putStr "Answer 2:  " >> print (firstStepAllFlashed m)
 
 ------------ Solutions
 
 flashesAfter :: Int -> Matrix Octopus -> Int
 flashesAfter x = sum . evalState (replicateM x step)
+
+firstStepAllFlashed :: Matrix Octopus -> Maybe Int
+firstStepAllFlashed = fmap (+1) . elemIndex 100 . evalState (sequence $ repeat step)
 
 ------------ Utils
 
