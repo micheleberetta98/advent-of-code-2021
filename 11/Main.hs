@@ -27,20 +27,21 @@ firstStepAllFlashed = fmap (+1) . elemIndex 100
 ------------ Utils
 
 step :: State (Matrix Octopus) Int
-step = do
+step =
   modify' (fmap increaseLuminosity)
-  gets (indicesWhere flashed) >>= flash
-  x <- gets (countIf flashed)
-  modify' (fmap resetOctopus)
-  pure x
+  >> gets flashedIndices >>= flash
+  >> gets (countIf flashed) <* modify' (fmap resetOctopus)
 
 flash :: Set (Int, Int) -> State (Matrix Octopus) ()
-flash flashedIxs = do
-  os <- get
-  let os' = foldl' (modifyElem increaseLuminosity) os $ concatMap neighbouringIndices flashedIxs
-  put os'
-  when (os /= os') $ do
-    flash $ indicesWhere flashed os' `S.difference` indicesWhere flashed os
+flash ixs = do
+  m <- get
+  let m' = foldl' (modifyElem increaseLuminosity) m $ concatMap neighbouringIndices ixs
+  put m'
+  when (m /= m') $ do
+    flash $ flashedIndices m' `S.difference` flashedIndices m
+
+flashedIndices :: Matrix Octopus -> Set (Int, Int)
+flashedIndices = indicesWhere flashed
 
 parse :: String -> Matrix Octopus
 parse = fromLists . map (map (Octopus . digitToInt)) . lines
