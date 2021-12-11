@@ -12,16 +12,17 @@ import           Octopus
 main :: IO ()
 main = do
   m <- parse <$> readFile "input.txt"
-  putStr "Answer 1:  " >> print (flashesAfter 100 m)
-  putStr "Answer 2:  " >> print (firstStepAllFlashed m)
+  let steps = evalState (sequence $ repeat step) m
+  putStr "Answer 1:  " >> print (flashesAfter 100 steps)
+  putStr "Answer 2:  " >> print (firstStepAllFlashed steps)
 
 ------------ Solutions
 
-flashesAfter :: Int -> Matrix Octopus -> Int
-flashesAfter x = sum . evalState (replicateM x step)
+flashesAfter :: Int -> [Int] -> Int
+flashesAfter x = sum . take x
 
-firstStepAllFlashed :: Matrix Octopus -> Maybe Int
-firstStepAllFlashed = fmap (+1) . elemIndex 100 . evalState (sequence $ repeat step)
+firstStepAllFlashed :: [Int] -> Maybe Int
+firstStepAllFlashed = fmap (+1) . elemIndex 100
 
 ------------ Utils
 
@@ -36,12 +37,10 @@ step = do
 flash :: Set (Int, Int) -> State (Matrix Octopus) ()
 flash flashedIxs = do
   os <- get
-  let os' = applyFlashEffect os $ concatMap (neighbouringIndices os) flashedIxs
-      willFlashIxs = indicesWhere flashed os' `S.difference` indicesWhere flashed os
+  let os' = foldl' (modifyElem increaseLuminosity) os $ concatMap neighbouringIndices flashedIxs
   put os'
-  when (os /= os') (flash willFlashIxs)
-  where
-    applyFlashEffect = foldl' (flip (modifyElem increaseLuminosity))
+  when (os /= os') $ do
+    flash $ indicesWhere flashed os' `S.difference` indicesWhere flashed os
 
 parse :: String -> Matrix Octopus
 parse = fromLists . map (map (Octopus . digitToInt)) . lines
