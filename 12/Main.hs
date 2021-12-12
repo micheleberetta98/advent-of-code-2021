@@ -7,7 +7,7 @@ main :: IO ()
 main = do
   system <- buildSystem . parse <$> readFile "input.txt"
   putStr "Answer 1: " >> print (length $ allPathsWith (elem, visit1)       system)
-  putStr "Answer 1: " >> print (length $ allPathsWith (isVisited2, visit2) system)
+  putStr "Answer 2: " >> print (length $ allPathsWith (isVisited2, visit2) system)
 
 ------------ Solutions
 
