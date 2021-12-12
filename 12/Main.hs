@@ -31,10 +31,10 @@ visit1 (BigCave _ _) s = s
 visit1 cave          s = M.insertWith (+) cave 1 s
 
 isVisited2 :: IsVisitedFn
-isVisited2 cave@(BigCave _ _) _ = False
+isVisited2 cave@(BigCave _ _) _      = False
 isVisited2 cave@(SmallCave _ _) seen = visits == 2 || (visits == 1 && doubleVisitedSmallCave seen)
   where visits = fromMaybe 0 (seen !? cave)
-isVisited2 cave seen = cave `M.member` seen
+isVisited2 cave seen                 = cave `M.member` seen
 
 visit2 :: VisitFn
 visit2 cave@(SmallCave _ _) seen
@@ -42,7 +42,7 @@ visit2 cave@(SmallCave _ _) seen
   | doubleVisitedSmallCave seen = seen
   | otherwise                   = M.insertWith (+) cave 1 seen
   where visits = fromMaybe 0 (seen !? cave)
-visit2 c s = visit1 c s
+visit2 c s                      = visit1 c s
 
 doubleVisitedSmallCave :: Map Cave Int -> Bool
 doubleVisitedSmallCave =  any isSmall . M.keys . M.filter (> 1)
