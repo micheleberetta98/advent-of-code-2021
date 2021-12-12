@@ -46,6 +46,10 @@ buildSystem = foldl' addAssoc M.empty
 startCave :: CaveSystem -> Cave
 startCave = (! "start")
 
+isSmall :: Cave -> Bool
+isSmall (SmallCave _ _) = True
+isSmall _               = False
+
 addNeighbor :: Cave -> Cave -> Cave
 addNeighbor n cave = cave{ neighbors = label n : neighbors cave }
 
