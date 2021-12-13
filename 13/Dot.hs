@@ -22,3 +22,10 @@ newCoord :: Int -> Int -> Int
 newCoord initial middlePoint
   | initial > middlePoint = middlePoint - (initial - middlePoint)
   | otherwise             = initial
+
+dotsMatrix :: Set Dot -> String
+dotsMatrix dots = unlines [[showCoords (x, y) | x <- [0..rows]] | y <- [0..cols]]
+  where
+    showCoords (i, j) = if Dot (i, j) `S.member` dots then '#' else '.'
+    rows = S.findMax (S.map (fst . coords) dots)
+    cols = S.findMax (S.map (snd . coords) dots)

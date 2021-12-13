@@ -1,6 +1,7 @@
 module Main where
 
 import           Data.Char          (isDigit)
+import           Data.List          (foldl')
 import           Data.Set           (fromList)
 import           Dot
 import           Text.Parsec        (char, choice, many1, newline, parse,
@@ -11,11 +12,17 @@ main :: IO ()
 main = do
   Right (dots, folds) <- parse content "" <$> readFile "input.txt"
   putStr "Answer 1:  " >> print (afterFirstFold folds dots)
+  let output = dotsMatrix (foldAll dots folds)
+  writeFile "output.txt" output
+  putStrLn "Answer 2:  in output.txt"
 
 ------------ Solutions
 
 afterFirstFold :: [Fold] -> Dots -> Int
 afterFirstFold folds = length . foldAlong (head folds)
+
+foldAll :: Dots -> [Fold] -> Dots
+foldAll = foldl' (flip foldAlong)
 
 ------------ Parser
 
