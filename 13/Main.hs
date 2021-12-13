@@ -12,8 +12,7 @@ main :: IO ()
 main = do
   Right (dots, folds) <- parse content "" <$> readFile "input.txt"
   putStr "Answer 1:  " >> print (afterFirstFold folds dots)
-  let output = dotsMatrix (foldAll dots folds)
-  writeFile "output.txt" output
+  writeFile "output.txt" $ dotsMatrix (foldAll dots folds)
   putStrLn "Answer 2:  in output.txt"
 
 ------------ Solutions
@@ -28,11 +27,10 @@ foldAll = foldl' (flip foldAlong)
 
 content :: Parser (Dots, [Fold])
 content = (,) <$> dots <*> (newline *> fold `sepBy` newline)
-  where
-    dots = fromList <$> dot `sepEndBy` newline
+  where dots = fromList <$> dot `sepEndBy` newline
 
 dot :: Parser Dot
-dot = Dot <$> ((,) <$> number <*> (char ',' *> number))
+dot = (,) <$> number <*> (char ',' *> number)
 
 fold :: Parser Fold
 fold = string "fold along " *> choice
