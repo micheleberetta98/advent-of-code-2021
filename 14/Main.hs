@@ -1,13 +1,11 @@
-{-# LANGUAGE TupleSections #-}
-
 module Main where
 
 import           Control.Arrow   ((&&&))
-import           Data.Bifunctor  (Bifunctor (bimap, first))
-import           Data.List
+import           Data.Bifunctor  (Bifunctor (first))
+import           Data.List       (foldl', tails)
 import           Data.Map.Strict (Map, (!))
 import qualified Data.Map.Strict as M
-import           Data.Maybe
+import           Data.Maybe      (mapMaybe)
 
 type Pair = (Char, Char)
 type Rules = Map Pair Char
@@ -22,40 +20,41 @@ main = do
 ------------ Solutions
 
 solve :: Int -> Rules -> String -> Int
-solve n rules = tupleDiff . (maximum &&& minimum) . M.elems . steps n rules
+solve n rules = tupleDiff . (maximum &&& minimum) . M.elems . afterSteps n rules
   where tupleDiff (a, b) = a - b
 
-steps :: Int -> Rules -> String -> Bag Char
-steps n rules polymer = snd $ steps' n (initialPairs polymer, initialCount polymer)
+afterSteps :: Int -> Rules -> String -> Bag Char
+afterSteps n rules polymer = snd $ afterSteps' n (toBag (pairs polymer), toBag polymer)
   where
-    steps' 0 acc = acc
-    steps' k acc = steps' (k-1) (step rules acc)
-
-initialPairs :: String -> Bag Pair
-initialPairs polymer = toBag $ zip (pairs polymer) (repeat 1)
-
-initialCount :: String -> Bag Char
-initialCount = M.fromList . map ((,) <$> head <*> length) . group . sort
+    afterSteps' 0 acc = acc
+    afterSteps' k acc = afterSteps' (k-1) (step rules acc)
 
 step :: Rules -> (Bag Pair, Bag Char) -> (Bag Pair, Bag Char)
-step rules (pairNumbers, letterCounts) = (pairNumbers', M.unionsWith (+) [newLetters, letterCounts])
+step rules (pairNumbers, letterCounts) =
+  ( bagFromPairs (concatPairs newPairs)
+  , M.unionWith (+) newLetters letterCounts
+  )
   where
     newPairs = map (deriveNewPairsFrom rules) $ M.assocs pairNumbers
-    newLetters = toBag $ map (first snd . fst) newPairs
-    pairNumbers' = toBag (concatPairs newPairs)
+    newLetters = bagFromPairs $ map (first snd . fst) newPairs
 
 ------------ Utils
 
 concatPairs :: [(a, a)] -> [a]
-concatPairs (p:rest) = fst p : snd p : concatPairs rest
-concatPairs _        = []
+concatPairs = foldl' (\acc p -> fst p : snd p : acc) []
 
 deriveNewPairsFrom :: Rules -> (Pair, Int) -> ((Pair, Int), (Pair, Int))
-deriveNewPairsFrom rules (k, v) = bimap (,v) (,v) ((fst k, x), (x, snd k))
+deriveNewPairsFrom rules (k@(a, b), v) =
+  ( ((a, x), v)
+  , ((x, b), v)
+  )
   where x = rules ! k
 
-toBag :: Ord a => [(a, Int)] -> Bag a
-toBag = M.fromListWith (+)
+toBag :: Ord a => [a] -> Bag a
+toBag = bagFromPairs . flip zip (repeat 1)
+
+bagFromPairs :: Ord a => [(a, Int)] -> Bag a
+bagFromPairs = M.fromListWith (+)
 
 pairs :: [a] -> [(a, a)]
 pairs = mapMaybe (toTuple . take 2) . tails
@@ -67,5 +66,5 @@ parse :: String -> (String, Rules)
 parse s = (polymer, M.fromList (mapMaybe (toTuple . words) rules))
   where
     (polymer:"":rules) = lines s
-    toTuple [from, "->", to] = Just ((head from, head (tail from)), head to)
-    toTuple _                = Nothing
+    toTuple [a:b:_, "->", to:_] = Just ((a, b), to)
+    toTuple _                   = Nothing
