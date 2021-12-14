@@ -1,12 +1,17 @@
+{-# LANGUAGE TupleSections #-}
+
 module Main where
 
-import           Data.Bifunctor
+import           Control.Arrow   ((&&&))
+import           Data.Bifunctor  (Bifunctor (bimap, first))
 import           Data.List
-import           Data.Map       (Map, (!))
-import qualified Data.Map       as M
+import           Data.Map.Strict (Map, (!))
+import qualified Data.Map.Strict as M
+import           Data.Maybe
 
-type Bag a = Map a Int
 type Pair = (Char, Char)
+type Rules = Map Pair Char
+type Bag a = Map a Int
 
 main :: IO ()
 main = do
@@ -16,53 +21,51 @@ main = do
 
 ------------ Solutions
 
-solve :: Int -> Map Pair Char -> String -> Int
-solve n rules = tupleDiff . mostLeastCommon . steps n rules
+solve :: Int -> Rules -> String -> Int
+solve n rules = tupleDiff . (maximum &&& minimum) . M.elems . steps n rules
+  where tupleDiff (a, b) = a - b
 
-mostLeastCommon :: Bag Char -> (Int, Int)
-mostLeastCommon m = (mostCommon assocs, leastCommon assocs)
-  where assocs = M.assocs m
-
-steps :: Int -> Map Pair Char -> String -> Bag Char
+steps :: Int -> Rules -> String -> Bag Char
 steps n rules polymer = snd $ steps' n (initialPairs polymer, initialCount polymer)
   where
     steps' 0 acc = acc
     steps' k acc = steps' (k-1) (step rules acc)
 
 initialPairs :: String -> Bag Pair
-initialPairs polymer = foldl' (\acc x -> M.insertWith (+) x 1 acc) M.empty $ pairs polymer
+initialPairs polymer = toBag $ zip (pairs polymer) (repeat 1)
 
 initialCount :: String -> Bag Char
 initialCount = M.fromList . map ((,) <$> head <*> length) . group . sort
 
-step :: Map Pair Char -> (Bag Pair, Bag Char) -> (Bag Pair, Bag Char)
-step rules (pairNumbers, t) = (pairNumbers', addCounts t newLetters)
+step :: Rules -> (Bag Pair, Bag Char) -> (Bag Pair, Bag Char)
+step rules (pairNumbers, letterCounts) = (pairNumbers', M.unionsWith (+) [newLetters, letterCounts])
   where
-    assocs = M.assocs pairNumbers
-    newLetters = foldl' (\acc (k, v) -> M.insertWith (+) k v acc) M.empty $ map (first (rules !)) assocs
-    x = concatMap (\(k, v) -> let x = rules ! k in [((fst k, x), v), ((x, snd k), v)]) assocs
-    pairNumbers' = foldl' (\acc (k, v) -> M.insertWith (+) k v acc) M.empty x
-
-addCounts :: Bag Char -> Bag Char -> Bag Char
-addCounts base = foldl' (\acc (k, v) -> M.insertWith (+) k v acc) base . M.assocs
+    newPairs = map (deriveNewPairsFrom rules) $ M.assocs pairNumbers
+    newLetters = toBag $ map (first snd . fst) newPairs
+    pairNumbers' = toBag (concatPairs newPairs)
 
 ------------ Utils
 
-tupleDiff :: (Int, Int) -> Int
-tupleDiff (a, b) = a - b
+concatPairs :: [(a, a)] -> [a]
+concatPairs (p:rest) = fst p : snd p : concatPairs rest
+concatPairs _        = []
 
-mostCommon :: [(Char, Int)] -> Int
-mostCommon = maximum . map snd
+deriveNewPairsFrom :: Rules -> (Pair, Int) -> ((Pair, Int), (Pair, Int))
+deriveNewPairsFrom rules (k, v) = bimap (,v) (,v) ((fst k, x), (x, snd k))
+  where x = rules ! k
 
-leastCommon :: [(Char, Int)] -> Int
-leastCommon = minimum . map snd
+toBag :: Ord a => [(a, Int)] -> Bag a
+toBag = M.fromListWith (+)
 
 pairs :: [a] -> [(a, a)]
-pairs = map toTuple . filter ((>1) . length) . map (take 2) . tails
-  where toTuple [a, b] = (a, b)
+pairs = mapMaybe (toTuple . take 2) . tails
+  where
+    toTuple [a, b] = Just (a, b)
+    toTuple _      = Nothing
 
-parse :: String -> (String, Map Pair Char)
-parse s = (polymer, M.fromList (map (toTuple . words) rules))
+parse :: String -> (String, Rules)
+parse s = (polymer, M.fromList (mapMaybe (toTuple . words) rules))
   where
     (polymer:"":rules) = lines s
-    toTuple [from, "->", to] = ((head from, head (tail from)), head to)
+    toTuple [from, "->", to] = Just ((head from, head (tail from)), head to)
+    toTuple _                = Nothing
