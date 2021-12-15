@@ -1,37 +1,22 @@
 module Matrix where
 
-import           Data.Vector (Vector, (//))
-import qualified Data.Vector as V
-
-data Matrix a = Matrix (Int, Int) (Vector (Vector a))
-  deriving (Eq, Show)
-
-instance Functor Matrix where
-  fmap f (Matrix d m) = Matrix d $ fmap (fmap f) m
+import           Data.HashSet (HashSet)
+import qualified Data.HashSet as HS
+import qualified Data.Vector  as V
 
 type Pos = (Int, Int)
+data SquareMatrix = SquareMatrix Int (V.Vector (V.Vector Int))
 
-rows, cols :: Matrix a -> Int
-rows (Matrix (r, _) _) = r
-cols (Matrix (_, c) _) = c
+fromLists :: [[Int]] -> SquareMatrix
+fromLists xs = let xs' = V.fromList (map V.fromList xs) in SquareMatrix (V.length xs') xs'
 
-fromLists :: [[a]] -> Matrix a
-fromLists xs = Matrix (r, c) . V.fromList . map V.fromList $ xs
-  where (r, c) = (length xs, length (head xs))
+(<!>) :: SquareMatrix -> Pos -> Int
+(<!>) (SquareMatrix d m) (i, j) =
+  let (di, i') = i `quotRem` d
+      (dj, j') = j `quotRem` d
+      x = (m V.! i') V.! j' + (di + dj)
+  in if x > 9 then x - 9 else x
 
-toLists :: Matrix a -> [[a]]
-toLists (Matrix _ xs) = map V.toList . V.toList $ xs
-
-(!) :: Matrix a -> Pos -> a
-(Matrix _ m) ! (i, j) = m V.! i V.! j
-
-setElem :: b -> Pos -> Matrix b -> Matrix b
-setElem x = flip $ modifyElem (const x)
-
-modifyElem :: (a -> a) -> Matrix a -> Pos -> Matrix a
-modifyElem f (Matrix d m) (i, j) = Matrix d $ m // [(i, updatedRow (m V.! i))]
-  where updatedRow v = v // [(j, f (v V.! j))]
-
-neighbouringIndices :: Matrix a -> Pos -> [Pos]
-neighbouringIndices m (i, j) = filter valid [(i, j-1), (i, j+1), (i-1,j), (i+1,j)]
-  where valid (x, y) = x >= 0 && x < rows m && y >= 0 && y < cols m
+neighbouringIndices :: Int -> SquareMatrix -> Pos -> HashSet Pos
+neighbouringIndices k (SquareMatrix d _) (i, j) = HS.fromList $ filter valid [(i, j-1), (i, j+1), (i-1,j), (i+1,j)]
+  where valid (x, y) = x >= 0 && x < k*d && y >= 0 && y < k*d
