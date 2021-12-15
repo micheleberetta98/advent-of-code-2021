@@ -22,7 +22,7 @@ source-repository head
 library
   exposed-modules:
       Main
-      Matrix
+      SquareMatrix
   other-modules:
       Paths_adv15
   hs-source-dirs:
@@ -37,7 +37,7 @@ library
 executable adv15-exe
   main-is: Main.hs
   other-modules:
-      Matrix
+      SquareMatrix
       Paths_adv15
   hs-source-dirs:
       ./

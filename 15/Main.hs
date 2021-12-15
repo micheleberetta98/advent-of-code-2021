@@ -3,7 +3,7 @@ module Main where
 import           Data.Char
 import           Data.Graph.AStar
 import           Data.List
-import           Matrix
+import           SquareMatrix
 
 main :: IO ()
 main = do

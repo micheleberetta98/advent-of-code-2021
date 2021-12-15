@@ -1,4 +1,4 @@
-module Matrix where
+module SquareMatrix where
 
 import           Data.HashSet (HashSet)
 import qualified Data.HashSet as HS
