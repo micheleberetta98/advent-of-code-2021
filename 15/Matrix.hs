@@ -19,6 +19,9 @@ fromLists :: [[a]] -> Matrix a
 fromLists xs = Matrix (r, c) . V.fromList . map V.fromList $ xs
   where (r, c) = (length xs, length (head xs))
 
+toLists :: Matrix a -> [[a]]
+toLists (Matrix _ xs) = map V.toList . V.toList $ xs
+
 (!) :: Matrix a -> Pos -> a
 (Matrix _ m) ! (i, j) = m V.! i V.! j
 
@@ -30,6 +33,5 @@ modifyElem f (Matrix d m) (i, j) = Matrix d $ m // [(i, updatedRow (m V.! i))]
   where updatedRow v = v // [(j, f (v V.! j))]
 
 neighbouringIndices :: Matrix a -> Pos -> [Pos]
--- neighbouringIndices m (i, j) = filter valid [(i, j-1), (i, j+1), (i-1,j), (i+1,j)]
-neighbouringIndices m (i, j) = filter valid [(i, j+1), (i+1,j)]
+neighbouringIndices m (i, j) = filter valid [(i, j-1), (i, j+1), (i-1,j), (i+1,j)]
   where valid (x, y) = x >= 0 && x < rows m && y >= 0 && y < cols m
