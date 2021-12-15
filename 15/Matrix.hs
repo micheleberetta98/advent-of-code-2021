@@ -1,7 +1,5 @@
 module Matrix where
 
-import           Data.Set    (Set)
-import qualified Data.Set    as S
 import           Data.Vector (Vector, (//))
 import qualified Data.Vector as V
 
@@ -35,12 +33,3 @@ neighbouringIndices :: Matrix a -> Pos -> [Pos]
 -- neighbouringIndices m (i, j) = filter valid [(i, j-1), (i, j+1), (i-1,j), (i+1,j)]
 neighbouringIndices m (i, j) = filter valid [(i, j+1), (i+1,j)]
   where valid (x, y) = x >= 0 && x < rows m && y >= 0 && y < cols m
-
-countIf :: (a -> Bool) -> Matrix a -> Int
-countIf p = length . indicesWhere p
-
-indicesWhere :: (a -> Bool) -> Matrix a -> Set Pos
-indicesWhere p m = S.filter (p . (m !)) (indices m)
-
-indices :: Matrix a -> Set Pos
-indices (Matrix (rows, cols) _) = S.fromList [(i, j) | i <- [0..rows-1], j <- [0..cols-1]]
