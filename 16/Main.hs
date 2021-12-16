@@ -2,7 +2,7 @@ module Main where
 
 import           Data.Char          (digitToInt)
 import           Data.List          (foldl')
-import           Data.Maybe
+import           Data.Maybe         (mapMaybe)
 import           Text.Parsec
 import           Text.Parsec.String (Parser)
 
