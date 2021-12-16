@@ -1,9 +1,9 @@
 module Main where
 
-import           Data.Char
-import           Data.List
+import           Data.Char          (digitToInt)
+import           Data.List          (foldl')
 import           Text.Parsec
-import           Text.Parsec.String
+import           Text.Parsec.String (Parser)
 
 data Packet
   = Literal { version :: Int, value :: Int }
@@ -12,50 +12,69 @@ data Packet
 
 main :: IO ()
 main = do
-  p <- parse packet "" . toBits <$> readFile "input.txt"
-  putStr "Answer 1:  " >> print (versionSum <$> p)
+  Right p <- parse packet "" . toBits <$> readFile "input.txt"
+  putStr "Answer 1:  " >> print (sumVersions p)
+  putStr "Answer 2:  " >> print (calcValue p)
+
 
 ------------ Solutions
 
-versionSum :: Packet -> Int
-versionSum (Literal v _)          = v
-versionSum (Operator v _ content) = v + sum (map versionSum content)
+sumVersions :: Packet -> Int
+sumVersions (Literal v _)          = v
+sumVersions (Operator v _ content) = v + sum (sumVersions <$> content)
+
+calcValue :: Packet -> Int
+calcValue (Literal _ v)          = v
+calcValue (Operator _ 0 ps)      = sum       (calcValue <$> ps)
+calcValue (Operator _ 1 ps)      = product   (calcValue <$> ps)
+calcValue (Operator _ 2 ps)      = minimum   (calcValue <$> ps)
+calcValue (Operator _ 3 ps)      = maximum   (calcValue <$> ps)
+calcValue (Operator _ 5 (a:b:_)) = boolToInt (calcValue a > calcValue b)
+calcValue (Operator _ 6 (a:b:_)) = boolToInt (calcValue a < calcValue b)
+calcValue (Operator _ 7 (a:b:_)) = boolToInt (calcValue a == calcValue b)
+calcValue _                      = undefined
 
 ------------ Parsing
 
 packet :: Parser Packet
 packet = do
-  v   <- bits 3
+  ver <- bits 3
   tag <- bits 3
   if tag == 4
-    then Literal v      <$> literal
-    else Operator v tag <$> operator
+    then Literal  ver     <$> literal
+    else Operator ver tag <$> operator
 
 literal :: Parser Int
-literal = do
-  b <- bits 1
-  bs <- bits 4
-  if b == 1
-    then (16 * bs +) <$> literal
-    else pure bs
+literal = literal' 0
+  where
+    literal' n = do
+      b  <- bits 1
+      n' <- (16 * n +) <$> bits 4
+      (if b == 1 then literal' else pure) n'
 
 operator :: Parser [Packet]
 operator = do
   lengthID <- bits 1
   if lengthID == 1
     then bits 11 >>= flip count packet
-    else bits 15 >>= parseSpan
+    else bits 15 >>= span
   where
-    parseSpan 0 = pure []
-    parseSpan n = do
+    span 0 = pure []
+    span n = do
       of0 <- getOffset
-      p <- packet
+      p   <- packet
       of1 <- getOffset
-      (:) p <$> parseSpan (n - (of1 - of0))
+      (:) p <$> span (n - (of1 - of0))
     getOffset = sourceColumn <$> getPosition
 
 bits :: Int -> Parser Int
 bits n = foldl' (\acc x -> 2 * acc + x) 0 . map digitToInt <$> count n (char '0' <|> char '1')
+
+------------ Utils
+
+boolToInt :: Bool -> Int
+boolToInt True  = 1
+boolToInt False = 0
 
 toBits :: String -> String
 toBits = concatMap (pad4 . toBin . digitToInt)
