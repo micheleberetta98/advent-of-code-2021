@@ -23,16 +23,20 @@ sumVersions :: Packet -> Int
 sumVersions (Literal v _)          = v
 sumVersions (Operator v _ content) = v + sum (sumVersions <$> content)
 
-calcValue :: Packet -> Int
-calcValue (Literal _ v)          = v
-calcValue (Operator _ 0 ps)      = sum       (calcValue <$> ps)
-calcValue (Operator _ 1 ps)      = product   (calcValue <$> ps)
-calcValue (Operator _ 2 ps)      = minimum   (calcValue <$> ps)
-calcValue (Operator _ 3 ps)      = maximum   (calcValue <$> ps)
-calcValue (Operator _ 5 (a:b:_)) = boolToInt (calcValue a > calcValue b)
-calcValue (Operator _ 6 (a:b:_)) = boolToInt (calcValue a < calcValue b)
-calcValue (Operator _ 7 (a:b:_)) = boolToInt (calcValue a == calcValue b)
-calcValue _                      = undefined
+calcValue :: Packet -> Maybe Int
+calcValue (Literal _ v)     = Just v
+calcValue (Operator _ 0 ps) = sum <$> mapM calcValue ps
+calcValue (Operator _ 1 ps) = product <$> mapM calcValue ps
+calcValue (Operator _ 2 ps) = minimum <$> mapM calcValue ps
+calcValue (Operator _ 3 ps) = maximum <$> mapM calcValue ps
+calcValue (Operator _ 5 ps) = applyFirstTwo (>) =<< mapM calcValue ps
+calcValue (Operator _ 6 ps) = applyFirstTwo (<) =<< mapM calcValue ps
+calcValue (Operator _ 7 ps) = applyFirstTwo (==) =<< mapM calcValue ps
+calcValue _                 = Nothing
+
+applyFirstTwo :: (Int -> Int -> Bool) -> [Int] -> Maybe Int
+applyFirstTwo f (a:b:_) = Just $ if f a b then 1 else 0
+applyFirstTwo _ _       = Nothing
 
 ------------ Parsing
 
@@ -68,13 +72,12 @@ operator = do
     getOffset = sourceColumn <$> getPosition
 
 bits :: Int -> Parser Int
-bits n = foldl' (\acc x -> 2 * acc + x) 0 . map digitToInt <$> count n (char '0' <|> char '1')
+bits n = binToInt . map digitToInt <$> count n (char '0' <|> char '1')
 
 ------------ Utils
 
-boolToInt :: Bool -> Int
-boolToInt True  = 1
-boolToInt False = 0
+binToInt :: [Int] -> Int
+binToInt = foldl' (\acc x -> 2 * acc + x) 0
 
 toBits :: String -> String
 toBits = concatMap (pad4 . toBin . digitToInt)
