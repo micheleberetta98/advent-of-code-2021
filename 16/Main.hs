@@ -2,6 +2,7 @@ module Main where
 
 import           Data.Char          (digitToInt)
 import           Data.List          (foldl')
+import           Data.Maybe
 import           Text.Parsec
 import           Text.Parsec.String (Parser)
 
@@ -80,8 +81,22 @@ binToInt :: String -> Int
 binToInt = foldl' (\acc x -> 2 * acc + x) 0 . map digitToInt
 
 toBits :: String -> String
-toBits = concatMap (pad4 . toBin . digitToInt)
+toBits = concat . mapMaybe toBin
   where
-    toBin 0 = "0"
-    toBin x = toBin (x `div` 2) ++ show (x `mod` 2)
-    pad4 xs = reverse . take 4 $ reverse xs ++ repeat '0'
+    toBin '0' = Just "0000"
+    toBin '1' = Just "0001"
+    toBin '2' = Just "0010"
+    toBin '3' = Just "0011"
+    toBin '4' = Just "0100"
+    toBin '5' = Just "0101"
+    toBin '6' = Just "0110"
+    toBin '7' = Just "0111"
+    toBin '8' = Just "1000"
+    toBin '9' = Just "1001"
+    toBin 'A' = Just "1010"
+    toBin 'B' = Just "1011"
+    toBin 'C' = Just "1100"
+    toBin 'D' = Just "1101"
+    toBin 'E' = Just "1110"
+    toBin 'F' = Just "1111"
+    toBin _   = Nothing
