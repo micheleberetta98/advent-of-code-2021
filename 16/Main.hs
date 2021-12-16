@@ -17,7 +17,6 @@ main = do
   putStr "Answer 1:  " >> print (sumVersions p)
   putStr "Answer 2:  " >> print (calcValue p)
 
-
 ------------ Solutions
 
 sumVersions :: Packet -> Int
@@ -81,22 +80,23 @@ binToInt :: String -> Int
 binToInt = foldl' (\acc x -> 2 * acc + x) 0 . map digitToInt
 
 toBits :: String -> String
-toBits = concat . mapMaybe toBin
+toBits = concat . mapMaybe (`lookup` assocs)
   where
-    toBin '0' = Just "0000"
-    toBin '1' = Just "0001"
-    toBin '2' = Just "0010"
-    toBin '3' = Just "0011"
-    toBin '4' = Just "0100"
-    toBin '5' = Just "0101"
-    toBin '6' = Just "0110"
-    toBin '7' = Just "0111"
-    toBin '8' = Just "1000"
-    toBin '9' = Just "1001"
-    toBin 'A' = Just "1010"
-    toBin 'B' = Just "1011"
-    toBin 'C' = Just "1100"
-    toBin 'D' = Just "1101"
-    toBin 'E' = Just "1110"
-    toBin 'F' = Just "1111"
-    toBin _   = Nothing
+    assocs =
+      [ ('0', "0000")
+      , ('1', "0001")
+      , ('2', "0010")
+      , ('3', "0011")
+      , ('4', "0100")
+      , ('5', "0101")
+      , ('6', "0110")
+      , ('7', "0111")
+      , ('8', "1000")
+      , ('9', "1001")
+      , ('A', "1010")
+      , ('B', "1011")
+      , ('C', "1100")
+      , ('D', "1101")
+      , ('E', "1110")
+      , ('F', "1111")
+      ]
