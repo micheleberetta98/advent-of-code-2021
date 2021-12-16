@@ -72,12 +72,12 @@ operator = do
     getOffset = sourceColumn <$> getPosition
 
 bits :: Int -> Parser Int
-bits n = binToInt . map digitToInt <$> count n (char '0' <|> char '1')
+bits n = binToInt <$> count n (char '0' <|> char '1')
 
 ------------ Utils
 
-binToInt :: [Int] -> Int
-binToInt = foldl' (\acc x -> 2 * acc + x) 0
+binToInt :: String -> Int
+binToInt = foldl' (\acc x -> 2 * acc + x) 0 . map digitToInt
 
 toBits :: String -> String
 toBits = concatMap (pad4 . toBin . digitToInt)
