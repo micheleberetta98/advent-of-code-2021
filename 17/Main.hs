@@ -1,15 +1,12 @@
 {-# LANGUAGE TransformListComp #-}
 module Main where
 
-import           Data.Function
 import           Data.Ix
 import           Data.List
 import           Text.Parsec
 import           Text.Parsec.String (Parser)
 
-type Pos = (Int, Int)
-type Vel = (Int, Int)
-type Bounds = (Pos, Pos)
+type Bounds = ((Int, Int), (Int, Int))
 
 main :: IO ()
 main = do
@@ -18,7 +15,7 @@ main = do
   putStr "Answer 1:  " >> print (maximum vs)
   putStr "Answer 2:  " >> print (length vs)
 
-yVelocities :: ((Int, Int), (Int, Int)) -> [Int]
+yVelocities :: Bounds -> [Int]
 yVelocities bounds@((x0, y0), (x1, y1)) = do
   -- In order to arrive at the platform, given that vx decreases by 1 at each step,
   -- it is needed that
