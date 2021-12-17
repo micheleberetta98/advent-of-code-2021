@@ -12,6 +12,7 @@ main = do
   Right bounds@((x0, y0), (x1, y1)) <- parse targetArea "" <$> readFile "input.txt"
   let vs = yVelocities bounds
   putStr "Answer 1:  " >> print (maximum vs)
+  putStr "Answer 2:  " >> print (length vs)
 
 yVelocities :: ((Int, Int), (Int, Int)) -> [Int]
 yVelocities bounds@((x0, y0), (x1, y1)) = do
