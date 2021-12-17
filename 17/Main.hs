@@ -7,6 +7,10 @@ import           Data.List
 import           Text.Parsec
 import           Text.Parsec.String (Parser)
 
+type Pos = (Int, Int)
+type Vel = (Int, Int)
+type Bounds = (Pos, Pos)
+
 main :: IO ()
 main = do
   Right bounds@((x0, y0), (x1, y1)) <- parse targetArea "" <$> readFile "input.txt"
@@ -31,15 +35,13 @@ yVelocities bounds@((x0, y0), (x1, y1)) = do
   let xf = vx * (vx + 1) `div` 2
   [ maximum ys
     | vy <- [y0..]
-    , let (ys0, ys1) = splitAt (vy + 1) $ scanl' (+) 0 [vy, vy - 1..]
-    , let ys = ys0 ++ takeWhile (>= y0) ys1
+    , let ys = takeWhile (>= y0) $ scanl' (+) 0 [vy, vy - 1..]
     , let yf = vy * (vx + 1) - xf
-    , then takeWhile by yf <= y1 || xf <= x1 && vy <= (max `on` abs) y0 y1
+    , then takeWhile by yf <= y1 || xf <= x1 && vy <= abs y0
     , any (inRange bounds) $ zip xs ys
     ]
 
-
-targetArea :: Parser ((Int, Int), (Int, Int))
+targetArea :: Parser Bounds
 targetArea = do
   x0 <- string "target area: x=" *> number
   x1 <- string ".." *> number
