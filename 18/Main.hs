@@ -15,18 +15,21 @@ import           Text.Megaparsec.Char.Lexer (decimal)
 data Pairs = Number Int | Pair Pairs Pairs
 data Tok = Open | Close | Value Int deriving (Eq, Ord)
 
-instance Show Pairs where
-  show (Number x) = show x
-  show (Pair l r) = concat ["[", show l, ",", show r, "]"]
-
 main :: IO ()
 main = do
   Right ps <- traverse (parse pairsParser "") . lines <$> readFile "input.txt"
   putStr "Answer 1:  " >> print (magnitude $ snailAdd ps)
+  putStr "Answer 2:  " >> print (maximum . map (magnitude . snailAdd2) $ allPairs ps)
 
 snailAdd :: [Pairs] -> Pairs
 snailAdd = foldl1' snailAdd'
   where snailAdd' l r = reduce $ Pair l r
+
+snailAdd2 :: (Pairs, Pairs) -> Pairs
+snailAdd2 (a, b) = snailAdd [a, b]
+
+allPairs :: [Pairs] -> [(Pairs, Pairs)]
+allPairs ps = concat [[(x, y), (y, x)] | x <- ps, y <- ps]
 
 magnitude :: Pairs -> Int
 magnitude (Number x) = x
