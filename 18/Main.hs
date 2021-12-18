@@ -2,8 +2,6 @@
 
 module Main where
 
-import           Control.Monad
-import           Data.Bifunctor
 import           Data.Either                (fromRight)
 import           Data.List
 import           Data.Maybe
@@ -12,7 +10,7 @@ import           Data.Void
 import           Text.Megaparsec
 import           Text.Megaparsec.Char.Lexer (decimal)
 
-data Pairs = Number Int | Pair Pairs Pairs
+data Pairs = Number Int | Pair Pairs Pairs deriving (Eq)
 data Tok = Open | Close | Value Int deriving (Eq, Ord)
 
 main :: IO ()
@@ -26,10 +24,10 @@ snailAdd = foldl1' snailAdd'
   where snailAdd' l r = reduce $ Pair l r
 
 snailAdd2 :: (Pairs, Pairs) -> Pairs
-snailAdd2 (a, b) = snailAdd [a, b]
+snailAdd2 (a, b) = reduce $ Pair a b
 
 allPairs :: [Pairs] -> [(Pairs, Pairs)]
-allPairs ps = concat [[(x, y), (y, x)] | x <- ps, y <- ps]
+allPairs ps = concat [[(x, y), (y, x)] | x <- ps, y <- ps, x /= y]
 
 magnitude :: Pairs -> Int
 magnitude (Number x) = x

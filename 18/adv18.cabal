@@ -22,7 +22,6 @@ source-repository head
 library
   exposed-modules:
       Main
-      Tmp
   other-modules:
       Paths_adv18
   hs-source-dirs:
@@ -36,7 +35,6 @@ library
 executable adv18-exe
   main-is: Main.hs
   other-modules:
-      Tmp
       Paths_adv18
   hs-source-dirs:
       ./
